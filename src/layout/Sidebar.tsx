@@ -13,6 +13,11 @@ const Sidebar: React.FC<Props> = () => {
   const [isShow, setIsShow] = useState<boolean>(true);
   const dispatch = useAppDispatch();
 
+  const onSave = () => {
+    dispatch(saveDashboard());
+    window.alert('儲存成功');
+  };
+
   return (
     <aside className={classnames(isShow ? 'w-1/2' : 'w-0')}>
       <div className={'h-full bg-blue-600 sticky top-0 min-h-screen'}>
@@ -46,10 +51,7 @@ const Sidebar: React.FC<Props> = () => {
                   </Draggable>
                 </div>
                 <div className="flex justify-end mt-2.5">
-                  <BaseButton
-                    onClick={() => dispatch(saveDashboard())}
-                    variant="secondary"
-                  >
+                  <BaseButton onClick={() => onSave()} variant="secondary">
                     儲存
                   </BaseButton>
                 </div>

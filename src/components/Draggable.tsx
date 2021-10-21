@@ -32,16 +32,17 @@ const Draggable: React.FC<Props> = ({
       <div className="p-4 flex justify-between bg-blue-300 space-x-6">
         <h4 className="text-lg text-gray-600">{name}</h4>
         <div className="flex items-center space-x-6">
-          <button
-            className="cursor-move text-black"
-            {...listeners}
-            {...attributes}
-          >
-            <i className="gg-controller" />
-          </button>
-          {close && (
+          {close ? (
             <button onClick={onClose} className="text-black">
               <i className="gg-close-o" />
+            </button>
+          ) : (
+            <button
+              className="cursor-move text-black"
+              {...listeners}
+              {...attributes}
+            >
+              <i className="gg-controller" />
             </button>
           )}
         </div>
