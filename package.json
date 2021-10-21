@@ -58,5 +58,6 @@
   },
   "prettier": {
     "singleQuote": true
-  }
+  },
+  "homepage": "https://tp6gw94.github.io/collection/react-dnd-dashboard"
 }
