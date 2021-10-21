@@ -42,8 +42,10 @@ export const cardSlice = createSlice({
       assertsRainfall(card);
       const { station, displayType, data } = action.payload;
       card.station = station;
-      card.displayType = displayType;
-      card.data = data;
+      card.displayType = Number(displayType);
+      if (data) {
+        card.data = [...data];
+      }
     },
     updatePredictCard: (state, action: UpdatePredictCardPayload) => {
       const card = state.dashboard.find(({ id }) => action.payload.id === id);
@@ -52,9 +54,11 @@ export const cardSlice = createSlice({
         action.payload;
       card.predictor = predictor;
       card.forecastCode = forecastCode;
-      card.displayType = displayType;
+      card.displayType = Number(displayType);
       card.location = location;
-      card.data = data;
+      if (data) {
+        card.data = [...data];
+      }
     },
     saveDashboard: (state) => {
       localStorage.setItem('dashboard', JSON.stringify(state.dashboard));

@@ -1,4 +1,4 @@
-import React, { FormEvent, ReactElement, useState } from 'react';
+import React, { ReactElement } from 'react';
 import DashboardCard from './DashboardCard';
 import {
   cwbDataTypeOptions,
@@ -8,7 +8,6 @@ import {
 } from '../consts/options';
 import { Predictors } from '../consts/predictors';
 import { ForecastCodes } from '../consts/forecastCodes';
-import { CwbDisplayType } from '../consts/cwbDisplayType';
 import Draggable from './Draggable';
 import { CardTypes } from '../consts/cardTypes';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
@@ -23,8 +22,9 @@ import { PredictApiResponse } from '../types/PredictApiResponse';
 import FormItem from './FormItem';
 import { RootState } from '../app/store';
 import { assertsPredict, PredictData } from '../types/Predict';
-import FormSelect from './FormSelect';
 import CardData from './CardData';
+import SelectField from './SelectField';
+import { Formik } from 'formik';
 
 type Props = {
   isEditable?: boolean;
@@ -49,74 +49,83 @@ const PredictCard: React.FC<Props> = ({
   const dispatch = useAppDispatch();
   assertsPredict(card);
 
-  const [predictor, setPredictor] = useState(card.predictor);
-  const [forecastCode, setForecastCode] = useState(card.forecastCode);
-  const [displayType, setDisplayType] = useState(card.displayType);
-  const [location, setLocation] = useState(card.location);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    setIsLoading(true);
-    e.preventDefault();
-    const predictData = await getPredictData({
-      city: forecastCode,
-      predictor: predictor,
-      location: location,
-    });
-    dispatch(
-      updatePredictCard({
-        id,
-        predictor,
-        forecastCode,
-        displayType,
-        location,
-        data: predictData,
-      })
-    );
-    setIsLoading(false);
-  };
-
   const Form = (): ReactElement => (
     <div className="flex justify-between">
-      <form onSubmit={handleSubmit} className="flex space-x-4">
-        <FormItem>
-          <span>預測項目：</span>
-          <FormSelect
-            options={predictorOptions}
-            value={predictor}
-            onChange={(e) => setPredictor(e.target.value as Predictors)}
-          />
-        </FormItem>
-        <FormItem>
-          <span>縣市位置：</span>
-          <FormSelect
-            options={cityOptions}
-            value={forecastCode}
-            onChange={(e) => setForecastCode(e.target.value as ForecastCodes)}
-          />
-        </FormItem>
-        <FormItem>
-          <span>鄉鎮位置：</span>
-          <FormSelect
-            options={locationOptions(forecastCode)}
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-        </FormItem>
-        <FormItem>
-          <span>顯示方式：</span>
-          <FormSelect
-            options={cwbDataTypeOptions}
-            value={displayType}
-            onChange={(e) =>
-              setDisplayType(Number(e.target.value) as CwbDisplayType)
-            }
-          />
-        </FormItem>
-        <BaseButton type="submit" variant={isLoading ? 'secondary' : 'primary'}>
-          {isLoading ? 'loading...' : '確認'}
-        </BaseButton>
-      </form>
+      <Formik
+        initialValues={{
+          predictor: card.predictor,
+          forecastCode: card.forecastCode,
+          location: card.location,
+          displayType: card.displayType,
+        }}
+        enableReinitialize={true}
+        onSubmit={async ({
+          displayType,
+          predictor,
+          forecastCode,
+          location,
+        }) => {
+          console.log(displayType, predictor, forecastCode, location);
+          const predictData = await getPredictData({
+            city: forecastCode,
+            predictor: predictor,
+            location: location,
+          });
+          dispatch(
+            updatePredictCard({
+              id,
+              predictor,
+              forecastCode,
+              displayType,
+              location,
+              data: predictData,
+            })
+          );
+        }}
+      >
+        {({ values, handleSubmit, isSubmitting }) => (
+          <form onSubmit={handleSubmit} className="flex space-x-4">
+            <FormItem>
+              <span>觀測站：</span>
+              <SelectField
+                name="predictor"
+                options={predictorOptions}
+                value={values.predictor}
+              />
+            </FormItem>
+            <FormItem>
+              <span>縣市位置：</span>
+              <SelectField
+                name="forecastCode"
+                options={cityOptions}
+                value={values.forecastCode}
+              />
+            </FormItem>
+            <FormItem>
+              <span>鄉鎮位置：</span>
+              <SelectField
+                name="location"
+                options={locationOptions(values.forecastCode)}
+                value={values.location}
+              />
+            </FormItem>
+            <FormItem>
+              <span>顯示方式：</span>
+              <SelectField
+                name="displayType"
+                options={cwbDataTypeOptions}
+                value={values.displayType}
+              />
+            </FormItem>
+            <BaseButton
+              type="submit"
+              variant={isSubmitting ? 'secondary' : 'primary'}
+            >
+              {isSubmitting ? 'Loading' : '確認'}
+            </BaseButton>
+          </form>
+        )}
+      </Formik>
     </div>
   );
 
@@ -135,7 +144,7 @@ const PredictCard: React.FC<Props> = ({
             <CardData
               displayType={card.displayType}
               data={JSON.stringify(card.data, null, 2)}
-              datasetName={location}
+              datasetName={card.location}
               datasets={card.data?.map(({ value }) => Number(value))}
               labels={card.data?.map(({ startTime }) => startTime)}
             />

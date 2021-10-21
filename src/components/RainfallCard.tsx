@@ -1,4 +1,4 @@
-import React, { FormEvent, ReactElement, useState } from 'react';
+import React, { ReactElement } from 'react';
 import Draggable from './Draggable';
 import { CardTypes } from '../consts/cardTypes';
 import DashboardCard from './DashboardCard';
@@ -16,9 +16,9 @@ import {
   updateRainfallCard,
 } from '../features/card/cardSlice';
 import CardData from './CardData';
-import { CwbDisplayType } from '../consts/cwbDisplayType';
-import FormSelect from './FormSelect';
 import { assertsRainfall } from '../types/Rainfall';
+import { Formik } from 'formik';
+import SelectField from './SelectField';
 
 type Props = { isEditable?: boolean; close?: boolean; id: string };
 
@@ -29,45 +29,46 @@ export const RainfallCard: React.FC<Props> = ({ id, close = false }) => {
   const dispatch = useAppDispatch();
   assertsRainfall(card);
 
-  const [station, setStation] = useState(card.station);
-  const [displayType, setDisplayType] = useState(card.displayType);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    setIsLoading(true);
-    e.preventDefault();
-    const { data } = await getRainfallData(station);
-    dispatch(updateRainfallCard({ id, station, displayType, data }));
-    setIsLoading(false);
-    console.log(data);
-  };
-
   const Form = (): ReactElement => (
     <div className="flex justify-between">
-      <form onSubmit={(e) => handleSubmit(e)} className="flex space-x-4">
-        <FormItem>
-          <span>觀測站：</span>
-          <FormSelect
-            options={stationOptions}
-            value={station}
-            onChange={(e) => setStation(e.target.value as Stations)}
-          />
-        </FormItem>
-
-        <FormItem>
-          <span>顯示方式：</span>
-          <FormSelect
-            options={cwbDataTypeOptions}
-            value={displayType}
-            onChange={(e) =>
-              setDisplayType(Number(e.target.value) as CwbDisplayType)
-            }
-          />
-        </FormItem>
-        <BaseButton type="submit" variant={isLoading ? 'secondary' : 'primary'}>
-          {isLoading ? 'loading...' : '確認'}
-        </BaseButton>
-      </form>
+      <Formik
+        initialValues={{
+          station: card.station,
+          displayType: card.displayType,
+        }}
+        enableReinitialize={true}
+        onSubmit={async ({ station, displayType }) => {
+          const { data } = await getRainfallData(station);
+          dispatch(updateRainfallCard({ id, station, displayType, data }));
+        }}
+      >
+        {({ values, handleSubmit, isSubmitting }) => (
+          <form onSubmit={handleSubmit} className="flex space-x-4">
+            <FormItem>
+              <span>觀測站：</span>
+              <SelectField
+                name="station"
+                options={stationOptions}
+                value={values.station}
+              />
+            </FormItem>
+            <FormItem>
+              <span>顯示方式：</span>
+              <SelectField
+                name="displayType"
+                options={cwbDataTypeOptions}
+                value={values.displayType}
+              />
+            </FormItem>
+            <BaseButton
+              type="submit"
+              variant={isSubmitting ? 'secondary' : 'primary'}
+            >
+              {isSubmitting ? 'Loading' : '確認'}
+            </BaseButton>
+          </form>
+        )}
+      </Formik>
     </div>
   );
 

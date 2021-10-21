@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Options } from '../types/Options';
 import { useField } from 'formik';
 
@@ -9,7 +9,13 @@ type Props = {
 };
 
 const SelectField: React.FC<Props> = ({ value, name, options }) => {
-  const [field] = useField({ name, value });
+  const [field, , { setValue }] = useField({ name, value });
+
+  useEffect(() => {
+    if (!options.find((option) => option.value === value)) {
+      setValue(options[0].value);
+    }
+  }, [options, setValue, value]);
 
   return (
     <select {...field} className="px-4 py-2">
